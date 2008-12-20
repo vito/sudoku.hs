@@ -1,0 +1,85 @@
+================
+  Installation
+================
+
+    ghc -c -O TestPJ.hs
+    ghc -o sudoku sudoku.hs TestPJ.o
+
+
+=========
+  Usage
+=========
+
+    ./sudoku
+
+You will be prompted to enter a grid. Enter one row at a time, using
+numbers 1-9 for clue tiles and anything else (e.g. ".", "X", " ") for
+empty tiles.
+
+Don't enter an empty grid. It's not as amusing as you'd think.
+
+
+===========
+  Testing
+===========
+
+I have included two forms of tests:
+
+1. Simon's Grids
+
+    ./sudoku test
+
+This will run through all of the grids that Simon Peyton-Jones used
+for his (non-guessing) Sudoku solver. It should be able to solve all
+of them rather quickly, even ones Simon's couldn't solve (since his
+doesn't guess).
+
+
+2. More Than Necessary
+
+    ./sudoku test17
+
+This will run through all 47,793 17-clue Sudoku grids in sudoku17.txt.
+
+It's quite boring, really. It just solves all of them until you kill it.
+
+But it proves it works!
+
+
+=====================
+  How does it work?
+=====================
+
+This program is not written for efficiency. It is written to be clear and
+concise. I wrote it how a human would solve the grid, not a computer.
+
+However, I have found it to be quite efficient.
+
+    1. A Grid is a list of rows, each 9 tiles long. The Grid is 9 rows long.
+       The tiles are all Maybe Int, with Just X representing a filled tile,
+       and Nothing representing an empty tile. Shocking, no?
+    2. The meat of the solving is done in solveLoop.
+
+solveLoop, guess, and tryAll:
+    1. If the grid is done, it stops there.
+    2. If the grid is stuck, it starts guessing:
+       1. `guess` will return a list of Grids, with the first empty tile
+          filled with each of its possibilties (per grid).
+       2. tryAll goes through the Grids returned by `guess`, one by one,
+          without further guessing.
+          1. If a valid grid is found without guessing, we're done.
+          2. If the grid cannot be solved without guessing, it is pushed
+             into a queue for guessing later.
+          3. After all of the tiles are gone through and no non-guessed
+             solution is found, it uses `solveLoop` on each grid, one by
+             one, repeating this cycle.
+    3. Otherwise, it will `solve` as many tiles as it can on the grid,
+       calling itself until it gets stuck (2) or it's filled (1).
+
+solve:
+    The tile is solved if one of the following holds true:
+    
+    * There is only one possibility.
+    * It holds a number unique to all other tiles in the box.
+    * It holds a number unique to all other tiles in the row.
+    * It holds a number unique to all other tiles in the column.
